@@ -3,7 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 #setting the parameter after Hit and Trial
-kernel_size=15
+kernel_size=20
 
 #Importing the images
 left=cv2.imread("left.png")
@@ -37,6 +37,7 @@ def add_padding(image, kernel_size):
 
 def disparity_construction(left_img, right_img, kernel_size, max_disparity=30):
     
+    #Padding before processing
     left_padded=add_padding(left_img, kernel_size)
     right_padded=add_padding(right_img, kernel_size)
 
@@ -45,21 +46,21 @@ def disparity_construction(left_img, right_img, kernel_size, max_disparity=30):
 
     offset= kernel_size//2
 
+    print("Processing...... Please wait for a minute or two.")
+
     for y in range(offset, height - offset):
         for x in range(offset, width - offset):
-            print(y)
 
-            min_cost=float("inf")
+            min_cost=float("inf") #Setting the cost to infinity initially
             best_disparity=0
         
-            search_range = min(x - offset, max_disparity)
+            search_range = min(x - offset, max_disparity) #Setting the proper serch range aprt
             left_part=left_padded[y-offset:y+offset+1, x-offset:x+offset+1]
 
             for d in range(search_range):
                 right_part=right_padded[y-offset:y+offset+1, (x-d)-offset:(x-d)+offset+1]
 
-                cost=np.sum((left_part-right_part)**2)
-                # print(cost)
+                cost=np.sum((left_part-right_part)**2) #SSD Calculation
 
                 if(cost<min_cost):
                     min_cost=cost
@@ -70,6 +71,7 @@ def disparity_construction(left_img, right_img, kernel_size, max_disparity=30):
     
     return disparity_map
 
+#Function for constructing Depth map from Disparity map
 def depth_map_construction(disparity_map):
 
     normalized_disp=(disparity_map/np.max(disparity_map))
@@ -85,6 +87,7 @@ def depth_map_construction(disparity_map):
     return depth_map
 
 
+#Processing Disparity map for Depth map construction
 disparity_map=disparity_construction(left_sobel, right_sobel, kernel_size)
 
 disparity_map_normalized= (disparity_map/ np.max(disparity_map))*255
@@ -93,6 +96,9 @@ disparity_map_normalized= disparity_map_normalized.astype(np.uint8)
 depth_map=depth_map_construction(disparity_map_normalized)
 height, width=depth_map.shape[:2]
 depth_map=depth_map[(kernel_size//2+1):height-(kernel_size//2),(kernel_size//2)+1:width-(kernel_size//2)]
+
+print("Done!!")
+
 cv2.imwrite("Depth_Map.png", depth_map)
 
 cv2.imshow('Depth Map', depth_map)

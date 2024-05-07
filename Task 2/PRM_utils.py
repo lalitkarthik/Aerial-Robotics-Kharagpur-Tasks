@@ -55,7 +55,7 @@ def k_nearest_neighbours(points, point, k):
     distances.sort()
     return [p for _,p in distances[:k]] 
 
-#Function to check if the line passes through the obstacle
+#Function to check if the line passes through the obstacle (Bresenhem's line drawing algo)
 def obstacle_crossing(image, p1, p2, maze):
     x1, y1 = p1
     x2, y2 = p2

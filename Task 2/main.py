@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import random
 from queue import PriorityQueue
 from PRM_A_star import astar
 from PRM_utils import RoadMap, generate_random_points, draw_circle, draw_path, k_nearest_neighbours, obstacle_crossing
@@ -8,9 +7,8 @@ from PRM_Turtle import turtle
 
 
 #Parameter definition (found using hit and trial after experimenting)
-points_generated= 500
+points_generated= 1000 #Try adjusting this parameter (increase it) if path is not found
 nearest_neighbours= 10
-
 
 #Loading the image
 img=cv2.imread("maze.png")
@@ -41,7 +39,6 @@ img_copy_1=img_copy.copy()
 
 #Generating Random points and drawing it
 coordinate=[]
-random.seed(42)
 generate_random_points(coordinate, (8,450), (20, 335), points_generated)
 
 #Initializing the start and end points
@@ -51,6 +48,7 @@ end1=(100,330)
 start2= (160,25)
 end2=(445,300)
 
+#Adding both the start and end points to teh roadmap
 coordinate.append(start1)
 coordinate.append(end1)
 coordinate.append(start2)
@@ -67,17 +65,25 @@ for coord in coordinate:
         maze.add_nodes(coord)
 
 line_copy=img_copy_1.copy()
-
+count=0 
+print("Processing.... Please wait for a minute or two.")
 for point in maze.nodes:
     neighbours=k_nearest_neighbours(maze.nodes, point, nearest_neighbours)
     for neighbour in neighbours:
         if point!=neighbour:
             if not obstacle_crossing(img_copy_1, point, neighbour, maze):
                 maze.add_neighbours(point, neighbour)
+                count+=1
                 cv2.line(line_copy, point, neighbour, (168,149,136), 1)
-                cv2.imshow("Line", line_copy)
-                cv2.waitKey(1)
+                if (count%250==0):
+                    #Visualises for the certain generations this is done to reduce computtation power
+                    cv2.imshow("Visualisation", line_copy)
+                    cv2.waitKey(1)
+cv2.destroyAllWindows()
 
+print("Done constructing the roadmap.")
+
+#Function to calculate path from start easy position
 def first_part():
     path1=astar(maze, start1, end1)
     line_copy_1=line_copy.copy()
@@ -96,7 +102,7 @@ def first_part():
     cv2.imwrite("Start_Easy.png", img_copy_path_1)
     cv2.destroyAllWindows()
 
-
+#Function to calculate path from start hard position
 def second_part():
     path2=astar(maze, start2, end2)
     line_copy_2=line_copy.copy()

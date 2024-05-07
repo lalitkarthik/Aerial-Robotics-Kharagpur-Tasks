@@ -34,20 +34,20 @@ def non_max_suppression(img,theta):
     m,n= img.shape
     z=np.zeros((m,n),dtype=np.int32)
 
-    angle = theta*180.0/np.pi
-    angle[angle<0]+= 180
+    angle =theta*180.0/np.pi #Converting to radians
+    angle[angle<0]+= 180 #making angles positiv
 
     for i in range(1,m-1):
         for j in range(1,n-1):
             q=255
             r=255
 
-            # Angle 0: Horizontal edges
+            # Angle 0 Horizontal edges
             if (0 <= angle[i, j] < 22.5) or (157.5 <= angle[i, j] <= 180):
                 r = img[i, j-1]  
                 q = img[i, j+1] 
 
-            # Angle 45: Diagonal edges from bottom left to top right
+            # Angle 45:Diagonal edges from bottom left to top right
             elif (22.5 <= angle[i, j] < 67.5):
                 r = img[i-1, j+1]
                 q = img[i+1, j-1] 
@@ -85,29 +85,31 @@ def threshold_hysterisis(img, high, low):
     res[weak_i, weak_j] = weak
 
     #Hysterisis
-
     for i in range(1, m-1):
         for j in range(1, n-1):
             if (res[i, j] == weak):
+                #conditions o check if the weak edge is connected to strong edges
                 if (
-                    (res[i+1, j-1] == strong) or (res[i+1, j] == strong) or
-                    (res[i+1, j+1] == strong) or (res[i, j-1] == strong) or
-                    (res[i, j+1] == strong) or (res[i-1, j-1] == strong) or
-                    (res[i-1, j] == strong) or (res[i-1, j+1] == strong)
+                    (res[i+1,j-1] == strong) or (res[i+1, j] == strong) or    
+                    (res[i+1,j+1] == strong) or (res[i, j-1] == strong) or
+                    (res[i,j+1] == strong) or (res[i-1, j-1] == strong) or
+                    (res[i-1,j] == strong) or (res[i-1, j+1] == strong)
                 ):
-                    res[i, j] = strong
+                    res[i,j] = strong
                 else:
-                    res[i, j] = 0
+                    res[i,j] = 0
 
     return res
 
 
-img=cv2.imread("table.png")
+img=cv2.imread("./Table.png")
+#Canny part
 grad, theta= sobel_edge_detection(img)
 edge=non_max_suppression(grad, theta)
 edges=threshold_hysterisis(edge, 200,255)
 edges = np.uint8(edges)
-cv2.imwrite("Edge_for_table.png", edges)
+
+cv2.imwrite("./Edge_for_table.png", edges)
 height, width = img.shape[0],img.shape[1]
 
 cv2.imshow("Edges",edges)
@@ -125,21 +127,21 @@ if lines is not None:
             c = y1 - m * x1
             
             # Calculate intersections
-            y_at_x0 = int(c)
-            y_at_xmax = int(m * width + c)
-            x_at_y0 = int(-c / m)
-            x_at_ymax = int((height - c) / m)
+            y_at_beginning = int(c)
+            y_at_end = int(m *width + c)
+            x_at_beginning = int((-c) / m)
+            x_at_end = int((height -c) / m)
             
             # Determine points to draw line
-            start_point = (0, y_at_x0) if 0 <= y_at_x0 <= height else (x_at_y0, 0)
-            end_point = (width, y_at_xmax) if 0 <= y_at_xmax <= height else (x_at_ymax, height)
+            start_point = (0, y_at_beginning) if 0 <= y_at_beginning <= height else (x_at_beginning, 0)
+            end_point = (width, y_at_end) if 0 <= y_at_end <= height else (x_at_end, height)
             
             # Draw the extended line
             cv2.line(line_image, start_point, end_point, (0, 255, 0), 3)
             cv2.circle(line_image, (x1,y1), 5, (0,255,0),-1 )
             cv2.circle(line_image, (x2,y2), 5, (0,255,0),-1 )
             if(count==0):
-                cv2.imwrite("Table_edge.png", line_image)
+                cv2.imwrite("./Table_edge.png", line_image)
             cv2.imshow('Lines Detected', line_image)
             cv2.waitKey(1000)
             count+=1
